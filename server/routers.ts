@@ -5,7 +5,6 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { generateProfileImage } from "./profileImageGenerator";
-import fs from "fs/promises";
 import path from "path";
 
 export const appRouter = router({
@@ -32,26 +31,19 @@ export const appRouter = router({
           // Aponta para o logo
           const logoPath = path.join(process.cwd(), "dist", "client", "logo.png");
 
-          // Gerar imagem
+          // Gerar imagem na memória
           const imageBuffer = await generateProfileImage(
             input.name,
             input.team,
             logoPath
           );
 
-          // Salvar fisicamente no servidor
-          const fileName = `${Date.now()}-${input.name.replace(/\s+/g, "-")}.jpg`;
-          const uploadDir = path.join(process.cwd(), "dist", "client", "uploads");
-
-          await fs.mkdir(uploadDir, { recursive: true });
-          const filePath = path.join(uploadDir, fileName);
-          await fs.writeFile(filePath, imageBuffer);
-
-          const url = `/uploads/${fileName}`;
+          // Converter a imagem para texto (Base64) e mandar direto para o navegador
+          const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
 
           return {
             success: true,
-            url,
+            url: base64Image,
             name: input.name,
             team: input.team,
           };
