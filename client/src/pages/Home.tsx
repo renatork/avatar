@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Download, MessageCircle } from "lucide-react";
+import { Loader2, Download, Share2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -46,7 +46,7 @@ export default function Home() {
         team: equipe,
       });
 
-      setPreviewUrl(result.url);
+      setPreviewUrl(result.url); // Recebe o Base64
       setPreviewNome(result.name);
       toast.success("Perfil gerado com sucesso!");
       setNome("");
@@ -66,22 +66,25 @@ export default function Home() {
     document.body.removeChild(link);
   };
 
-  const handleShareWhatsApp = (url: string, name: string) => {
-    if (!url) {
-      toast.error("Nenhuma imagem para compartilhar");
-      return;
-    }
-
+  const handleShare = async (url: string, name: string) => {
     try {
-      const text = encodeURIComponent(`Confira meu perfil na empresa: ${name}`);
-      // Captura o domínio atual automaticamente para garantir que a imagem abra no celular
-      const fullUrl = window.location.origin + url;
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${text}%20${encodeURIComponent(fullUrl)}`;
-      
-      window.open(whatsappUrl, "_blank");
+      // Converte o Base64 de volta para um arquivo físico no navegador do usuário
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const file = new File([blob], `${name.replace(/\s+/g, "-")}-perfil.jpg`, { type: "image/jpeg" });
+
+      // Abre o menu de compartilhamento nativo do celular
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Meu Perfil',
+          text: 'Confira minha nova foto de perfil!',
+        });
+      } else {
+        toast.info("O compartilhamento direto não é suportado no seu navegador. Por favor, clique em Baixar.");
+      }
     } catch (error) {
-      console.error("Erro ao compartilhar no WhatsApp:", error);
-      toast.error("Erro ao compartilhar no WhatsApp");
+      console.error("Erro ao compartilhar:", error);
     }
   };
 
@@ -175,11 +178,11 @@ export default function Home() {
                         Baixar
                       </Button>
                       <Button
-                        onClick={() => handleShareWhatsApp(previewUrl, previewNome)}
+                        onClick={() => handleShare(previewUrl, previewNome)}
                         className="flex-1 bg-green-600 hover:bg-green-700"
                       >
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        WhatsApp
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Compartilhar
                       </Button>
                     </div>
                   </div>
