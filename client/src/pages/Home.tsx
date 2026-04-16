@@ -9,11 +9,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const TEAM_OPTIONS = [
-  "Comercial",
-  "Crédito",
-  "Repasse",
-  "Assinatura",
   "Comercial | Crédito",
+  "Repasse",
   "Comercial | Repasse",
   "Comercial | Assinatura",
   "Comercial | Crédito - RJ",
