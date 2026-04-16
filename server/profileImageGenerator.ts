@@ -10,21 +10,16 @@ const WHITE = "#FFFFFF";
 const IMG_W = 800;
 const IMG_H = 800;
 
-// Registrar fontes
+//Fontes
 try {
-  // Tentar usar Montserrat ExtraBold do projeto
-  try {
-    registerFont("/home/ubuntu/gerador-perfil-beta/public/fonts/Montserrat-ExtraBold.ttf", {
-      family: "Montserrat",
-      weight: "900",
-    });
-  } catch (e) {
-    console.warn("Warning: Montserrat-ExtraBold not found, using Liberation Sans");
-    registerFont("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", {
-      family: "Montserrat",
-      weight: "bold",
-    });
-  }
+  const fontPath = path.join(process.cwd(), "dist", "client", "fonts", "Montserrat-ExtraBold.ttf");
+  registerFont(fontPath, {
+    family: "Montserrat",
+    weight: "900",
+  });
+} catch (error) {
+  console.warn("Warning: Montserrat-ExtraBold not found, using fallbacks", error);
+}
 
   registerFont("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", {
     family: "Myriad",
