@@ -6,8 +6,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { generateProfileImage } from "./profileImageGenerator";
 import { createGeneratedProfile, deleteProfile, getAllProfiles } from "./db";
-import fs from "fs/promises"; // Adicionado para lidar com arquivos
-import path from "path"; // Adicionado para lidar com caminhos
+import fs from "fs/promises";
+import path from "path";
 
 export const appRouter = router({
   system: systemRouter,
@@ -30,32 +30,32 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         try {
-          // 1. Aponta para o logo dentro da pasta public gerada no build
+          // 1. Aponta para o logo
           const logoPath = path.join(process.cwd(), "dist", "client", "logo.png");
 
-          // Gerar imagem
+          // 2. Gerar imagem
           const imageBuffer = await generateProfileImage(
             input.name,
             input.team,
             logoPath
           );
 
-          // 2. Definir onde salvar localmente na Hostinger
+          // 3. Salvar fisicamente no servidor
           const fileName = `${Date.now()}-${input.name.replace(/\s+/g, "-")}.jpg`;
           const uploadDir = path.join(process.cwd(), "dist", "client", "uploads");
 
-          // Criar a pasta uploads se ela não existir
           await fs.mkdir(uploadDir, { recursive: true });
-
-          // Salvar o arquivo de imagem fisicamente
           const filePath = path.join(uploadDir, fileName);
           await fs.writeFile(filePath, imageBuffer);
 
-          // 3. Criar a URL pública para acessar a imagem gerada
           const url = `/uploads/${fileName}`;
 
-          // Salvar no banco de dados
-          await createGeneratedProfile(0, input.name, input.team, url, filePath);
+          // 4. Tentar salvar no banco (Se falhar, não trava a geração)
+          try {
+            await createGeneratedProfile(1, input.name, input.team, url, filePath);
+          } catch (dbError) {
+            console.warn("Aviso: Imagem salva fisicamente, mas falhou ao gravar no banco.", dbError);
+          }
 
           return {
             success: true,
@@ -76,10 +76,9 @@ export const appRouter = router({
       try {
         return await getAllProfiles();
       } catch (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Erro ao buscar histórico de perfis",
-        });
+        // Se o banco falhar, retorna uma lista vazia em vez de travar o site
+        console.warn("Banco de dados não disponível. Retornando histórico vazio.");
+        return [];
       }
     }),
 
@@ -87,7 +86,7 @@ export const appRouter = router({
       .input(z.object({ profileId: z.number() }))
       .mutation(async ({ input }) => {
         try {
-          await deleteProfile(input.profileId, 0);
+          await deleteProfile(input.profileId, 1);
           return { success: true };
         } catch (error) {
           throw new TRPCError({
