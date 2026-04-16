@@ -6,7 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { generateProfileImage } from "./profileImageGenerator";
 import { storagePut } from "./storage";
-import { createGeneratedProfile, deleteProfile, getUserProfiles } from "./db";
+import { createGeneratedProfile, deleteProfile, getAllProfiles } from "./db";
 
 export const appRouter = router({
   system: systemRouter,
@@ -22,18 +22,14 @@ export const appRouter = router({
   }),
 
   profiles: router({
-    generate: protectedProcedure
+    generate: publicProcedure
       .input(
         z.object({
           name: z.string().min(1, "Nome é obrigatório"),
           team: z.string().min(1, "Equipe é obrigatória"),
         })
       )
-      .mutation(async ({ ctx, input }) => {
-        if (!ctx.user?.id) {
-          throw new TRPCError({ code: "UNAUTHORIZED" });
-        }
-
+      .mutation(async ({ input }) => {
         try {
           // Gerar imagem
           const imageBuffer = await generateProfileImage(
@@ -42,13 +38,13 @@ export const appRouter = router({
             "/home/ubuntu/upload/LogoBBrancomini.png"
           );
 
-          // Upload para S3
-          const fileKey = `profiles/${ctx.user.id}/${Date.now()}-${input.name.replace(/\s+/g, "-")}.jpg`;
+          // Upload para S3 (sem userId, usar timestamp como identificador único)
+          const fileKey = `profiles/public/${Date.now()}-${input.name.replace(/\s+/g, "-")}.jpg`;
           const { url } = await storagePut(fileKey, imageBuffer, "image/jpeg");
 
-          // Salvar no banco de dados
+          // Salvar no banco de dados (userId = 0 para perfis públicos)
           await createGeneratedProfile(
-            ctx.user.id,
+            0,
             input.name,
             input.team,
             url,
@@ -70,13 +66,10 @@ export const appRouter = router({
         }
       }),
 
-    list: protectedProcedure.query(async ({ ctx }) => {
-      if (!ctx.user?.id) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
-      }
-
+    list: publicProcedure.query(async () => {
       try {
-        const profiles = await getUserProfiles(ctx.user.id);
+        // Retornar todos os perfis públicos (userId = 0)
+        const profiles = await getAllProfiles();
         return profiles;
       } catch (error) {
         console.error("Error fetching profiles:", error);
@@ -87,15 +80,12 @@ export const appRouter = router({
       }
     }),
 
-    delete: protectedProcedure
+    delete: publicProcedure
       .input(z.object({ profileId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        if (!ctx.user?.id) {
-          throw new TRPCError({ code: "UNAUTHORIZED" });
-        }
-
+      .mutation(async ({ input }) => {
         try {
-          await deleteProfile(input.profileId, ctx.user.id);
+          // Permitir deleção de qualquer perfil público
+          await deleteProfile(input.profileId, 0);
           return { success: true };
         } catch (error) {
           console.error("Error deleting profile:", error);

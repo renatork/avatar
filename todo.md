@@ -30,3 +30,5 @@
 - [x] Botão de compartilhamento para WhatsApp
 - [x] Integração com WhatsApp Web/API para envio direto de imagens
 - [ ] QR Code para compartilhamento rápido
+- [x] Remover tela de login (acesso público)
+- [x] Pesquisa básica para localizar imagens geradas anteriormente

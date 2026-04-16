@@ -1,13 +1,11 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Download, Trash2, LogIn, MessageCircle } from "lucide-react";
-import { getLoginUrl } from "@/const";
+import { Loader2, Download, Trash2, MessageCircle, Search } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
 const TEAM_OPTIONS = [
@@ -29,17 +27,27 @@ const TEAM_OPTIONS = [
 ];
 
 export default function Home() {
-  const { user, isAuthenticated } = useAuth();
   const [nome, setNome] = useState("");
   const [equipe, setEquipe] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewNome, setPreviewNome] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const generateMutation = trpc.profiles.generate.useMutation();
-  const listQuery = trpc.profiles.list.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
+  const listQuery = trpc.profiles.list.useQuery();
   const deleteMutation = trpc.profiles.delete.useMutation();
+
+  // Filtrar perfis baseado na pesquisa
+  const filteredProfiles = useMemo(() => {
+    if (!listQuery.data) return [];
+    
+    const query = searchQuery.toLowerCase();
+    return listQuery.data.filter(
+      (profile) =>
+        profile.name.toLowerCase().includes(query) ||
+        profile.team.toLowerCase().includes(query)
+    );
+  }, [listQuery.data, searchQuery]);
 
   const handleGenerate = async () => {
     if (!nome.trim() || !equipe) {
@@ -110,41 +118,13 @@ export default function Home() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Gerador de Perfil Beta</CardTitle>
-            <CardDescription>Crie sua foto de perfil personalizada</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-gray-600 mb-6">
-              Faça login para começar a gerar suas imagens de perfil com a identidade visual Brancomini.
-            </p>
-            <Button
-              asChild
-              className="w-full bg-[#115FB4] hover:bg-blue-700"
-              size="lg"
-            >
-              <a href={getLoginUrl()}>
-                <LogIn className="mr-2 h-4 w-4" />
-                Fazer Login
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Gerador de Perfil Beta</h1>
           <p className="text-gray-600">
-            Bem-vindo, {user?.name}! Crie sua foto de perfil personalizada.
+            Crie sua foto de perfil personalizada com a identidade visual Brancomini.
           </p>
         </div>
 
@@ -252,21 +232,33 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Histórico */}
+        {/* Histórico com Pesquisa */}
         <div className="mt-8">
           <Card>
             <CardHeader>
               <CardTitle>Histórico de Perfis</CardTitle>
               <CardDescription>Seus perfis gerados anteriormente</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {/* Barra de Pesquisa */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Pesquisar por nome ou equipe..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Lista de Perfis */}
               {listQuery.isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-[#115FB4]" />
                 </div>
-              ) : listQuery.data && listQuery.data.length > 0 ? (
+              ) : filteredProfiles.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {listQuery.data.map((profile) => (
+                  {filteredProfiles.map((profile) => (
                     <div key={profile.id} className="group relative">
                       <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square">
                         <img
@@ -276,34 +268,34 @@ export default function Home() {
                         />
                       </div>
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDownload(profile.imageUrl, profile.name)}
-                        className="text-white hover:bg-white/20"
-                        title="Baixar"
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleShareWhatsApp(profile.imageUrl, profile.name)}
-                        className="text-white hover:bg-green-500/20"
-                        title="Compartilhar no WhatsApp"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(profile.id)}
-                        className="text-white hover:bg-red-500/20"
-                        disabled={deleteMutation.isPending}
-                        title="Deletar"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDownload(profile.imageUrl, profile.name)}
+                          className="text-white hover:bg-white/20"
+                          title="Baixar"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleShareWhatsApp(profile.imageUrl, profile.name)}
+                          className="text-white hover:bg-green-500/20"
+                          title="Compartilhar no WhatsApp"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(profile.id)}
+                          className="text-white hover:bg-red-500/20"
+                          disabled={deleteMutation.isPending}
+                          title="Deletar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                       <p className="mt-2 text-sm font-medium text-gray-900 truncate">
                         {profile.name}
@@ -311,6 +303,10 @@ export default function Home() {
                       <p className="text-xs text-gray-500 truncate">{profile.team}</p>
                     </div>
                   ))}
+                </div>
+              ) : searchQuery ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Nenhum perfil encontrado com "{searchQuery}"</p>
                 </div>
               ) : (
                 <div className="text-center py-8">

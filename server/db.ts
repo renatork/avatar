@@ -127,6 +127,20 @@ export async function getUserProfiles(userId: number) {
   return result;
 }
 
+export async function getAllProfiles() {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db
+    .select()
+    .from(generatedProfiles)
+    .orderBy(generatedProfiles.createdAt);
+
+  return result;
+}
+
 export async function deleteProfile(profileId: number, userId: number) {
   const db = await getDb();
   if (!db) {
