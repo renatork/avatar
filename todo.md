@@ -24,3 +24,9 @@
 - [ ] Suporte a mais combinações de equipes
 - [ ] Edição de perfis gerados anteriormente
 - [ ] Compartilhamento de perfis via link
+
+## Novas Funcionalidades
+
+- [x] Botão de compartilhamento para WhatsApp
+- [x] Integração com WhatsApp Web/API para envio direto de imagens
+- [ ] QR Code para compartilhamento rápido

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Download, Trash2, LogIn } from "lucide-react";
+import { Loader2, Download, Trash2, LogIn, MessageCircle } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
@@ -84,6 +84,29 @@ export default function Home() {
     } catch (error) {
       toast.error("Erro ao deletar perfil");
       console.error(error);
+    }
+  };
+
+  const handleShareWhatsApp = (url: string, name: string) => {
+    if (!url) {
+      toast.error("Nenhuma imagem para compartilhar");
+      return;
+    }
+
+    try {
+      const text = encodeURIComponent(`Confira meu perfil na Brancomini: ${name}`);
+      const whatsappUrl = `https://wa.me/?text=${text}%20${encodeURIComponent(url)}`;
+      
+      const whatsappWindow = window.open(whatsappUrl, "_blank", "width=600,height=600");
+      
+      if (!whatsappWindow) {
+        toast.error("Nao foi possivel abrir o WhatsApp. Verifique se o aplicativo esta instalado.");
+      } else {
+        toast.success("Abrindo WhatsApp...");
+      }
+    } catch (error) {
+      console.error("Erro ao compartilhar no WhatsApp:", error);
+      toast.error("Erro ao compartilhar no WhatsApp");
     }
   };
 
@@ -195,13 +218,22 @@ export default function Home() {
                       className="w-64 h-64 object-cover rounded"
                     />
                   </div>
-                  <Button
-                    onClick={() => handleDownload(previewUrl, previewNome)}
-                    className="w-full bg-[#115FB4] hover:bg-blue-700"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Baixar Imagem
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleDownload(previewUrl, previewNome)}
+                      className="flex-1 bg-[#115FB4] hover:bg-blue-700"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Baixar
+                    </Button>
+                    <Button
+                      onClick={() => handleShareWhatsApp(previewUrl, previewNome)}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -244,23 +276,34 @@ export default function Home() {
                         />
                       </div>
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDownload(profile.imageUrl, profile.name)}
-                          className="text-white hover:bg-white/20"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(profile.id)}
-                          className="text-white hover:bg-red-500/20"
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDownload(profile.imageUrl, profile.name)}
+                        className="text-white hover:bg-white/20"
+                        title="Baixar"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleShareWhatsApp(profile.imageUrl, profile.name)}
+                        className="text-white hover:bg-green-500/20"
+                        title="Compartilhar no WhatsApp"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(profile.id)}
+                        className="text-white hover:bg-red-500/20"
+                        disabled={deleteMutation.isPending}
+                        title="Deletar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                       </div>
                       <p className="mt-2 text-sm font-medium text-gray-900 truncate">
                         {profile.name}
