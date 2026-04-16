@@ -151,7 +151,7 @@ function vitePluginManusDebugCollector(): Plugin {
 const plugins = [react(), tailwindcss()];
 
 export default defineConfig({
-  base: "/sistemas/avatar/",
+  base: "/",
   plugins,
   resolve: {
     alias: {
