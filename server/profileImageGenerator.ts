@@ -10,8 +10,9 @@ const WHITE = "#FFFFFF";
 const IMG_W = 800;
 const IMG_H = 800;
 
-//Fontes
+// Registrar fontes
 try {
+  // Tentar usar Montserrat ExtraBold do projeto (caminho relativo)
   const fontPath = path.join(process.cwd(), "dist", "client", "fonts", "Montserrat-ExtraBold.ttf");
   registerFont(fontPath, {
     family: "Montserrat",
@@ -21,12 +22,14 @@ try {
   console.warn("Warning: Montserrat-ExtraBold not found, using fallbacks", error);
 }
 
+// Tentar registrar fonte de fallback/nome
+try {
   registerFont("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", {
     family: "Myriad",
     weight: "bold",
   });
 } catch (error) {
-  console.warn("Warning: Some fonts could not be registered", error);
+  console.warn("Warning: Some fallback fonts could not be registered", error);
 }
 
 export async function generateProfileImage(
