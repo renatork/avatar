@@ -3,9 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Download, Trash2, MessageCircle, Search } from "lucide-react";
+import { Loader2, Download, MessageCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const TEAM_OPTIONS = [
@@ -31,23 +31,8 @@ export default function Home() {
   const [equipe, setEquipe] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewNome, setPreviewNome] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
 
   const generateMutation = trpc.profiles.generate.useMutation();
-  const listQuery = trpc.profiles.list.useQuery();
-  const deleteMutation = trpc.profiles.delete.useMutation();
-
-  // Filtrar perfis baseado na pesquisa
-  const filteredProfiles = useMemo(() => {
-    if (!listQuery.data) return [];
-    
-    const query = searchQuery.toLowerCase();
-    return listQuery.data.filter(
-      (profile) =>
-        profile.name.toLowerCase().includes(query) ||
-        profile.team.toLowerCase().includes(query)
-    );
-  }, [listQuery.data, searchQuery]);
 
   const handleGenerate = async () => {
     if (!nome.trim() || !equipe) {
@@ -66,9 +51,6 @@ export default function Home() {
       toast.success("Perfil gerado com sucesso!");
       setNome("");
       setEquipe("");
-
-      // Recarregar histórico
-      listQuery.refetch();
     } catch (error) {
       toast.error("Erro ao gerar perfil");
       console.error(error);
@@ -78,21 +60,10 @@ export default function Home() {
   const handleDownload = (url: string, name: string) => {
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${name}-perfil.jpg`;
+    link.download = `${name.replace(/\s+/g, "-")}-perfil.jpg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleDelete = async (profileId: number) => {
-    try {
-      await deleteMutation.mutateAsync({ profileId });
-      toast.success("Perfil deletado com sucesso!");
-      listQuery.refetch();
-    } catch (error) {
-      toast.error("Erro ao deletar perfil");
-      console.error(error);
-    }
   };
 
   const handleShareWhatsApp = (url: string, name: string) => {
@@ -102,16 +73,12 @@ export default function Home() {
     }
 
     try {
-      const text = encodeURIComponent(`Confira meu perfil na Brancomini: ${name}`);
-      const whatsappUrl = `https://wa.me/?text=${text}%20${encodeURIComponent(url)}`;
+      const text = encodeURIComponent(`Confira meu perfil na empresa: ${name}`);
+      // Captura o domínio atual automaticamente para garantir que a imagem abra no celular
+      const fullUrl = window.location.origin + url;
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${text}%20${encodeURIComponent(fullUrl)}`;
       
-      const whatsappWindow = window.open(whatsappUrl, "_blank", "width=600,height=600");
-      
-      if (!whatsappWindow) {
-        toast.error("Nao foi possivel abrir o WhatsApp. Verifique se o aplicativo esta instalado.");
-      } else {
-        toast.success("Abrindo WhatsApp...");
-      }
+      window.open(whatsappUrl, "_blank");
     } catch (error) {
       console.error("Erro ao compartilhar no WhatsApp:", error);
       toast.error("Erro ao compartilhar no WhatsApp");
@@ -119,19 +86,19 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4 md:p-8 flex items-center justify-center">
+      <div className="max-w-4xl w-full mx-auto">
+        <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Gerador de Perfil Beta</h1>
           <p className="text-gray-600">
-            Crie sua foto de perfil personalizada com a identidade visual Brancomini.
+            Crie sua foto de perfil personalizada com a identidade visual da empresa.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Formulário */}
-          <div className="md:col-span-1">
-            <Card>
+          <div>
+            <Card className="h-full border-0 shadow-lg">
               <CardHeader>
                 <CardTitle>Criar Perfil</CardTitle>
                 <CardDescription>Preencha os dados abaixo</CardDescription>
@@ -141,7 +108,7 @@ export default function Home() {
                   <Label htmlFor="nome">Nome</Label>
                   <Input
                     id="nome"
-                    placeholder="Seu nome completo"
+                    placeholder="Seu nome (ex: Ana Beatriz)"
                     value={nome}
                     onChange={(e) => setNome(e.target.value)}
                     disabled={generateMutation.isPending}
@@ -167,12 +134,12 @@ export default function Home() {
                 <Button
                   onClick={handleGenerate}
                   disabled={generateMutation.isPending || !nome.trim() || !equipe}
-                  className="w-full bg-[#115FB4] hover:bg-blue-700"
+                  className="w-full bg-[#115FB4] hover:bg-blue-700 h-12 text-md mt-4"
                 >
                   {generateMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Gerando...
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Gerando Imagem...
                     </>
                   ) : (
                     "Gerar Perfil"
@@ -183,138 +150,49 @@ export default function Home() {
           </div>
 
           {/* Preview */}
-          <div className="md:col-span-2">
-            {previewUrl ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Preview</CardTitle>
-                  <CardDescription>Sua imagem de perfil</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-center bg-gray-100 rounded-lg p-4">
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="w-64 h-64 object-cover rounded"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleDownload(previewUrl, previewNome)}
-                      className="flex-1 bg-[#115FB4] hover:bg-blue-700"
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Baixar
-                    </Button>
-                    <Button
-                      onClick={() => handleShareWhatsApp(previewUrl, previewNome)}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      WhatsApp
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Preview</CardTitle>
-                  <CardDescription>Sua imagem aparecerá aqui</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center bg-gray-100 rounded-lg p-16">
-                    <p className="text-gray-500">Nenhuma imagem gerada ainda</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-
-        {/* Histórico com Pesquisa */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Histórico de Perfis</CardTitle>
-              <CardDescription>Seus perfis gerados anteriormente</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Barra de Pesquisa */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Pesquisar por nome ou equipe..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              {/* Lista de Perfis */}
-              {listQuery.isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#115FB4]" />
-                </div>
-              ) : filteredProfiles.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {filteredProfiles.map((profile) => (
-                    <div key={profile.id} className="group relative">
-                      <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square">
-                        <img
-                          src={profile.imageUrl}
-                          alt={profile.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDownload(profile.imageUrl, profile.name)}
-                          className="text-white hover:bg-white/20"
-                          title="Baixar"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleShareWhatsApp(profile.imageUrl, profile.name)}
-                          className="text-white hover:bg-green-500/20"
-                          title="Compartilhar no WhatsApp"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(profile.id)}
-                          className="text-white hover:bg-red-500/20"
-                          disabled={deleteMutation.isPending}
-                          title="Deletar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <p className="mt-2 text-sm font-medium text-gray-900 truncate">
-                        {profile.name}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">{profile.team}</p>
+          <div>
+            <Card className="h-full border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle>Resultado</CardTitle>
+                <CardDescription>Sua imagem pronta para uso</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col h-[calc(100%-5rem)]">
+                {previewUrl ? (
+                  <div className="flex flex-col h-full justify-between space-y-6">
+                    <div className="flex justify-center bg-gray-100 rounded-lg p-4">
+                      <img
+                        src={previewUrl}
+                        alt="Preview do Perfil"
+                        className="w-64 h-64 object-cover rounded shadow-md"
+                      />
                     </div>
-                  ))}
-                </div>
-              ) : searchQuery ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Nenhum perfil encontrado com "{searchQuery}"</p>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Nenhum perfil gerado ainda</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => handleDownload(previewUrl, previewNome)}
+                        className="flex-1 bg-[#115FB4] hover:bg-blue-700"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Baixar
+                      </Button>
+                      <Button
+                        onClick={() => handleShareWhatsApp(previewUrl, previewNome)}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        WhatsApp
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center bg-gray-50 rounded-lg h-full min-h-[250px] border-2 border-dashed border-gray-200">
+                    <p className="text-gray-400 text-center px-6">
+                      Preencha os dados e clique em gerar para visualizar a imagem aqui.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
