@@ -6,6 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { generateProfileImage } from "./profileImageGenerator";
 import path from "path";
+import fs from "fs"; 
 
 export const appRouter = router({
   system: systemRouter,
@@ -28,17 +29,34 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         try {
-          // Aponta para o logo
-          const logoPath = path.join(process.cwd(), "dist", "client", "logo.png");
+          // 1. Procurar o logo com prioridade máxima no caminho exato que você informou
+          const possibleLogoPaths = [
+            path.join(process.cwd(), "client", "public", "logo.png"), // Caminho exato indicado
+            path.join(process.cwd(), "dist", "client", "logo.png"),   // Caso o Vite mova no build
+            path.join(process.cwd(), "public", "logo.png"),           // Fallback raiz
+            path.join(process.cwd(), "dist", "logo.png")              // Fallback alternativo
+          ];
 
-          // Gerar imagem na memória
+          let logoPath = "";
+          for (const p of possibleLogoPaths) {
+            if (fs.existsSync(p)) {
+              logoPath = p;
+              break; // Para a busca assim que encontrar o arquivo
+            }
+          }
+
+          if (!logoPath) {
+            console.warn("AVISO: Arquivo logo.png não encontrado no servidor.");
+          }
+
+          // 2. Gerar imagem na memória
           const imageBuffer = await generateProfileImage(
             input.name,
             input.team,
             logoPath
           );
 
-          // Converter a imagem para texto (Base64) e mandar direto para o navegador
+          // 3. Converter a imagem para texto (Base64) e mandar direto para o navegador
           const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
 
           return {
