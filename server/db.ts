@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, generatedProfiles } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,58 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function createGeneratedProfile(
+  userId: number,
+  name: string,
+  team: string,
+  imageUrl: string,
+  imageKey: string
+) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db.insert(generatedProfiles).values({
+    userId,
+    name,
+    team,
+    imageUrl,
+    imageKey,
+  });
+
+  return result;
+}
+
+export async function getUserProfiles(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db
+    .select()
+    .from(generatedProfiles)
+    .where(eq(generatedProfiles.userId, userId))
+    .orderBy(generatedProfiles.createdAt);
+
+  return result;
+}
+
+export async function deleteProfile(profileId: number, userId: number) {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db
+    .delete(generatedProfiles)
+    .where(
+      and(
+        eq(generatedProfiles.id, profileId),
+        eq(generatedProfiles.userId, userId)
+      )
+    );
+
+  return result;
+}
