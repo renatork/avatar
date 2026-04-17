@@ -11,12 +11,14 @@ import { toast } from "sonner";
 const TEAM_OPTIONS = [
   "Comercial | Crédito",
   "Comercial | Crédito - RJ",
+  "Crédito",
+  "Repasse | Crédito", //Carol
+  "Crédito | Comercial",
   "Comercial | Repasse",
   "Comercial | Assinatura",
   "Repasse",
   "Repasse | Assinatura",
   "Gestão | Assinatura", //Thays
-  "Gestão | Comercial", //Carol
   "Gestão | Comercial e Crédito", //Flavia
   "Gestão | Geral", //Juliana
   "Gestão | Repasse", //Leticia  
