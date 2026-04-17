@@ -10,17 +10,16 @@ import { toast } from "sonner";
 
 const TEAM_OPTIONS = [
   "Comercial | Crédito",
-  "Repasse",
+  "Comercial | Crédito - RJ",
   "Comercial | Repasse",
   "Comercial | Assinatura",
-  "Comercial | Crédito - RJ",
+  "Repasse",
   "Repasse | Assinatura",
-  "Gestão | Comercial",
-  "Gestão | Crédito",
-  "Gestão | Repasse",
-  "Gestão | Assinatura",
-  "Gestão | Geral",
-  "Gestão | Comercial e Crédito",
+  "Gestão | Assinatura", //Thays
+  "Gestão | Comercial", //Carol
+  "Gestão | Comercial e Crédito", //Flavia
+  "Gestão | Geral", //Juliana
+  "Gestão | Repasse", //Leticia  
 ];
 
 export default function Home() {
@@ -89,9 +88,9 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Gerador de Perfil Beta</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Gerador de Perfil Beta Negócios</h1>
           <p className="text-gray-600">
-            Crie sua foto de perfil personalizada com a identidade visual da empresa.
+            Crie sua foto de perfil do Whatsapp padronizada com a identidade visual da empresa.
           </p>
         </div>
 
@@ -105,7 +104,7 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Nome</Label>
+                  <Label htmlFor="nome">Primeiro nome</Label>
                   <Input
                     id="nome"
                     placeholder="Seu nome (ex: Ana Beatriz)"
@@ -116,7 +115,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="equipe">Equipe</Label>
+                  <Label htmlFor="equipe">Equipe (1=Crédito / 2=Repasse / 3=Crédito / 4=Assinatura / 5=Comercial / 6=RJ)</Label>
                   <Select value={equipe} onValueChange={setEquipe} disabled={generateMutation.isPending}>
                     <SelectTrigger id="equipe">
                       <SelectValue placeholder="Selecione sua equipe" />
