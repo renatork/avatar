@@ -12,7 +12,6 @@ const TEAM_OPTIONS = [
   "Comercial | Crédito",
   "Comercial | Crédito - RJ",
   "Crédito",
-  "Repasse | Crédito", //Carol
   "Crédito | Comercial",
   "Comercial | Repasse",
   "Comercial | Assinatura",
@@ -21,7 +20,8 @@ const TEAM_OPTIONS = [
   "Gestão | Assinatura", //Thays
   "Gestão | Comercial e Crédito", //Flavia
   "Gestão | Geral", //Juliana
-  "Gestão | Repasse", //Leticia  
+  "Gestão | Repasse", //Leticia 
+  "Gestão | Repasse e Crédito", //Carol
 ];
 
 export default function Home() {
@@ -117,7 +117,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="equipe">Equipe (1=Crédito / 2=Repasse / 3=Crédito / 4=Assinatura / 5=Comercial / 6=RJ)</Label>
+                  <Label htmlFor="equipe">Equipe (1=Comercial / 2=Repasse / 3=Crédito / 4=Assinatura / 5=Comercial / 6=RJ)</Label>
                   <Select value={equipe} onValueChange={setEquipe} disabled={generateMutation.isPending}>
                     <SelectTrigger id="equipe">
                       <SelectValue placeholder="Selecione sua equipe" />
