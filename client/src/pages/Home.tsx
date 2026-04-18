@@ -10,7 +10,6 @@ import { toast } from "sonner";
 
 const TEAM_OPTIONS = [
   "Comercial | Crédito",
-  "Comercial | Crédito - RJ",
   "Crédito",
   "Crédito | Comercial",
   "Comercial | Repasse",
