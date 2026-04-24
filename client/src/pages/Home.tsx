@@ -31,6 +31,16 @@ export default function Home() {
 
   const generateMutation = trpc.profiles.generate.useMutation();
 
+  // Função de download (movida para cima para ser acessada na geração)
+  const handleDownload = (url: string, name: string) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${name.replace(/\s+/g, "-")}-perfil.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleGenerate = async () => {
     if (!nome.trim() || !equipe) {
       toast.error("Por favor, preencha nome e equipe");
@@ -43,9 +53,15 @@ export default function Home() {
         team: equipe,
       });
 
-      setPreviewUrl(result.url); // Recebe o Base64
+      // Atualiza o preview na tela
+      setPreviewUrl(result.url); 
       setPreviewNome(result.name);
-      toast.success("Perfil gerado com sucesso!");
+      toast.success("Perfil gerado e baixado com sucesso!");
+      
+      // Aciona o download automaticamente
+      handleDownload(result.url, result.name);
+
+      // Limpa os campos
       setNome("");
       setEquipe("");
     } catch (error) {
@@ -54,23 +70,12 @@ export default function Home() {
     }
   };
 
-  const handleDownload = (url: string, name: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${name.replace(/\s+/g, "-")}-perfil.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handleShare = async (url: string, name: string) => {
     try {
-      // Converte o Base64 de volta para um arquivo físico no navegador do usuário
       const response = await fetch(url);
       const blob = await response.blob();
       const file = new File([blob], `${name.replace(/\s+/g, "-")}-perfil.jpg`, { type: "image/jpeg" });
 
-      // Abre o menu de compartilhamento nativo do celular
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -89,9 +94,9 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Gerador de Perfil Beta Negócios</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Gerador de Perfil Beta</h1>
           <p className="text-gray-600">
-            Crie sua foto de perfil do Whatsapp padronizada com a identidade visual da empresa.
+            Crie sua foto de perfil personalizada com a identidade visual da empresa.
           </p>
         </div>
 
@@ -105,7 +110,7 @@ export default function Home() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nome">Primeiro nome</Label>
+                  <Label htmlFor="nome">Nome</Label>
                   <Input
                     id="nome"
                     placeholder="Seu nome (ex: Ana Beatriz)"
@@ -116,7 +121,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="equipe">Equipe (1=Comercial / 2=Repasse / 3=Crédito / 4=Assinatura / 5=Comercial / 6=RJ)</Label>
+                  <Label htmlFor="equipe">Equipe</Label>
                   <Select value={equipe} onValueChange={setEquipe} disabled={generateMutation.isPending}>
                     <SelectTrigger id="equipe">
                       <SelectValue placeholder="Selecione sua equipe" />
