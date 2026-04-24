@@ -121,7 +121,7 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="equipe">Equipe</Label>
+                  <Label htmlFor="equipe">Equipe (1=Comercial / 2=Repasse / 3=Crédito / 4=Assinatura / 5=Comercial / 6=RJ)</Label>
                   <Select value={equipe} onValueChange={setEquipe} disabled={generateMutation.isPending}>
                     <SelectTrigger id="equipe">
                       <SelectValue placeholder="Selecione sua equipe" />
