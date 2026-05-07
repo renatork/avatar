@@ -123,13 +123,13 @@ export async function generateProfileImageRJ(
   // 2. Logo no Topo
   try {
     const logo = await loadImage(logoPath);
-    // Queremos que a logo ocupe cerca de 80% da largura da imagem
-    const targetLogoW = IMG_W * 0.8;
+    // Queremos que a logo ocupe cerca de 75% da largura da imagem
+    const targetLogoW = IMG_W * 0.75;
     const ratio = targetLogoW / logo.width;
     const logoH = logo.height * ratio;
     
     const logoX = (IMG_W - targetLogoW) / 2;
-    const logoY = IMG_H * 0.05; // 5% da altura a partir do topo
+    const logoY = IMG_H * 0.02; // Move a logo mais para cima (2%)
     
     ctx.drawImage(logo, logoX, logoY, targetLogoW, logoH);
   } catch (error) {
@@ -146,8 +146,8 @@ export async function generateProfileImageRJ(
   }
   
   const centerX = IMG_W / 2;
-  const centerY = IMG_H * 0.55; // No centro verticalmente, ou um pouco abaixo do logo
-  const radius = IMG_W * 0.26; // Raio do círculo
+  const centerY = IMG_H * 0.56; // Desce a foto ligeiramente para não tampar a logo
+  const radius = IMG_W * 0.25; // Reduz ligeiramente o raio (25%) para dar mais espaço
 
   ctx.save();
   ctx.beginPath();
@@ -163,6 +163,13 @@ export async function generateProfileImageRJ(
   
   ctx.drawImage(userPhoto, drawX, drawY, drawW, drawH);
   ctx.restore();
+
+  // Borda cinza de 5px ao redor da foto
+  ctx.lineWidth = 6; // Colocando 6px para garantir boa visibilidade (5px a 6px)
+  ctx.strokeStyle = "#7b7b7c"; // Tom de cinza agradável
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.stroke();
 
   // 4. Desenhar o nome abaixo da foto
   const nameParts = nome.trim().split(" ");
