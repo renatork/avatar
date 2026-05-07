@@ -4,7 +4,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
-import { generateProfileImage } from "./profileImageGenerator";
+import { generateProfileImage, generateProfileImageRJ } from "./profileImageGenerator";
 import path from "path";
 import fs from "fs"; 
 
@@ -25,6 +25,7 @@ export const appRouter = router({
         z.object({
           name: z.string().min(1, "Nome é obrigatório"),
           team: z.string().min(1, "Equipe é obrigatória"),
+          photoBase64: z.string().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -50,11 +51,29 @@ export const appRouter = router({
           }
 
           // 2. Gerar imagem na memória
-          const imageBuffer = await generateProfileImage(
-            input.name,
-            input.team,
-            logoPath
-          );
+          let imageBuffer: Buffer;
+          if (input.team === "RJ") {
+            const baseRJPath = path.join(process.cwd(), "server", "base_rj.png");
+            if (!fs.existsSync(baseRJPath)) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Arquivo base_rj.png não encontrado no servidor.",
+              });
+            }
+            if (!input.photoBase64) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "A foto é obrigatória para a equipe RJ",
+              });
+            }
+            imageBuffer = await generateProfileImageRJ(input.name, input.photoBase64, baseRJPath);
+          } else {
+            imageBuffer = await generateProfileImage(
+              input.name,
+              input.team,
+              logoPath
+            );
+          }
 
           // 3. Converter a imagem para texto (Base64) e mandar direto para o navegador
           const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;

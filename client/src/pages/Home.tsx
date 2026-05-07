@@ -18,15 +18,28 @@ const TEAM_OPTIONS = [
   "Gestão", //Juliana
   "Gestão | Repasse", //Leticia 
   "Gestão | Repasse e Crédito", //Carol
+  "RJ", //RJ Team
 ];
 
 export default function Home() {
   const [nome, setNome] = useState("");
   const [equipe, setEquipe] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewNome, setPreviewNome] = useState<string>("");
 
   const generateMutation = trpc.profiles.generate.useMutation();
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhoto(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Função de download (movida para cima para ser acessada na geração)
   const handleDownload = (url: string, name: string) => {
@@ -44,10 +57,16 @@ export default function Home() {
       return;
     }
 
+    if (equipe === "RJ" && !photo) {
+      toast.error("Por favor, selecione uma foto");
+      return;
+    }
+
     try {
       const result = await generateMutation.mutateAsync({
         name: nome,
         team: equipe,
+        photoBase64: photo || undefined,
       });
 
       // Atualiza o preview na tela
@@ -132,6 +151,19 @@ export default function Home() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {equipe === "RJ" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="foto">Sua Foto</Label>
+                    <Input
+                      id="foto"
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      disabled={generateMutation.isPending}
+                    />
+                  </div>
+                )}
 
                 <Button
                   onClick={handleGenerate}
