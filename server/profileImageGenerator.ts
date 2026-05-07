@@ -123,13 +123,13 @@ export async function generateProfileImageRJ(
   // 2. Logo no Topo
   try {
     const logo = await loadImage(logoPath);
-    // Queremos que a logo ocupe cerca de 60-70% da largura da imagem
-    const targetLogoW = IMG_W * 0.7;
+    // Queremos que a logo ocupe cerca de 80% da largura da imagem
+    const targetLogoW = IMG_W * 0.8;
     const ratio = targetLogoW / logo.width;
     const logoH = logo.height * ratio;
     
     const logoX = (IMG_W - targetLogoW) / 2;
-    const logoY = IMG_H * 0.08; // 8% da altura a partir do topo
+    const logoY = IMG_H * 0.05; // 5% da altura a partir do topo
     
     ctx.drawImage(logo, logoX, logoY, targetLogoW, logoH);
   } catch (error) {
