@@ -53,20 +53,13 @@ export const appRouter = router({
           // 2. Gerar imagem na memória
           let imageBuffer: Buffer;
           if (input.team === "RJ") {
-            const baseRJPath = path.join(process.cwd(), "server", "base_rj.png");
-            if (!fs.existsSync(baseRJPath)) {
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Arquivo base_rj.png não encontrado no servidor.",
-              });
-            }
             if (!input.photoBase64) {
               throw new TRPCError({
                 code: "BAD_REQUEST",
                 message: "A foto é obrigatória para a equipe RJ",
               });
             }
-            imageBuffer = await generateProfileImageRJ(input.name, input.photoBase64, baseRJPath);
+            imageBuffer = await generateProfileImageRJ(input.name, input.photoBase64, logoPath);
           } else {
             imageBuffer = await generateProfileImage(
               input.name,
