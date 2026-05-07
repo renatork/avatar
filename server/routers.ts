@@ -59,11 +59,11 @@ export const appRouter = router({
                 message: "A foto é obrigatória para a equipe RJ",
               });
             }
-            const rjLogoPath = path.join(process.cwd(), "server", "logo_header.png");
+            const rjLogoPath = path.join(process.cwd(), "server", "logo_header.jpg");
             if (!fs.existsSync(rjLogoPath)) {
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
-                message: "Arquivo logo_header.png não encontrado no servidor.",
+                message: "Arquivo logo_header.jpg não encontrado no servidor.",
               });
             }
             imageBuffer = await generateProfileImageRJ(input.name, input.photoBase64, rjLogoPath);
