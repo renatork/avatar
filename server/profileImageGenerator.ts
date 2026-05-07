@@ -113,7 +113,7 @@ export async function generateProfileImageRJ(
   const baseImage = await loadImage(baseImagePath);
   const IMG_W = baseImage.width;
   const IMG_H = baseImage.height;
-  
+
   const canvas = createCanvas(IMG_W, IMG_H);
   const ctx = canvas.getContext("2d");
 
@@ -132,7 +132,7 @@ export async function generateProfileImageRJ(
     console.error("Error loading user photo:", err);
     throw new Error("Failed to load user photo");
   }
-  
+
   const centerX = IMG_W / 2;
   const centerY = IMG_H * 0.51; // Slightly below center
   const radius = IMG_W * 0.24;
@@ -142,13 +142,13 @@ export async function generateProfileImageRJ(
   ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
   ctx.closePath();
   ctx.clip();
-  
+
   const scale = Math.max((radius * 2) / userPhoto.width, (radius * 2) / userPhoto.height);
   const drawW = userPhoto.width * scale;
   const drawH = userPhoto.height * scale;
   const drawX = centerX - drawW / 2;
   const drawY = centerY - drawH / 2;
-  
+
   ctx.drawImage(userPhoto, drawX, drawY, drawW, drawH);
   ctx.restore();
 

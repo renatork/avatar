@@ -6,7 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { generateProfileImage, generateProfileImageRJ } from "./profileImageGenerator";
 import path from "path";
-import fs from "fs"; 
+import fs from "fs";
 
 export const appRouter = router({
   system: systemRouter,

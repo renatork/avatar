@@ -70,10 +70,10 @@ export default function Home() {
       });
 
       // Atualiza o preview na tela
-      setPreviewUrl(result.url); 
+      setPreviewUrl(result.url);
       setPreviewNome(result.name);
       toast.success("Perfil gerado e baixado com sucesso!");
-      
+
       // Aciona o download automaticamente
       handleDownload(result.url, result.name);
 
